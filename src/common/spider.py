@@ -72,3 +72,24 @@ def get_content(url):
         li = data.find_all('li',class_='specrow')
         if(li): return li
         else: return "正则表达式可能有误，无法匹配到内容"
+
+def getDetail(liList):
+    """
+    :param liList:  bs4.element.Tag 列表
+    :return: 返回提取好的信息列表，信息格式：['2013款 改款经典 1.6L 手动风尚版', '11.29', '--', '4.23', '651']
+    """
+    carMouths = []
+    count = 0
+    for i in liList:
+        title = i.find('div', class_='emiss-title').find('a').string   #车型标题
+        emissPrice = i.find_all('div', class_='emiss-price')
+        price = emissPrice[0].find('a').string                          #厂商指导价
+        price2 = emissPrice[1].string.replace(" ","").replace("\r\n","")                 #二手车价格
+        score =  i.find('div',class_ = 'emiss-fen').find('a')  # 用户评分
+        score = re.sub("<.*?>","",str(score))
+        participantNum = i.find('div',class_='emiss-ren').find('a').string
+        carMouth = [title,price,price2,score,participantNum]
+        carMouths.insert(count,carMouth)
+        count = count +1
+        # print(carMouth)
+    return carMouths

@@ -7,31 +7,14 @@ import random
 
 import demjson
 from bs4 import BeautifulSoup
-from src.common.saveToFile import save
-from src.common.spider import get_content,get_code
+from src.common.spider import get_code
 
 baseUrl = "https://k.autohome.com.cn"
-grade = ["/suva01/"]
-def getDetail(liList):
-    """
-    :param liList:  bs4.element.Tag 列表
-    :return: 返回提取好的信息列表，信息格式：['2013款 改款经典 1.6L 手动风尚版', '11.29', '--', '4.23', '651']
-    """
-    carMouths = []
-    count = 0
-    for i in liList:
-        title = i.find('div', class_='emiss-title').find('a').string   #车型标题
-        emissPrice = i.find_all('div', class_='emiss-price')
-        price = emissPrice[0].find('a').string                          #厂商指导价
-        price2 = emissPrice[1].string.replace(" ","").replace("\r\n","")                 #二手车价格
-        score =  i.find('div',class_ = 'emiss-fen').find('a')  # 用户评分
-        score = re.sub("<.*?>","",str(score))
-        participantNum = i.find('div',class_='emiss-ren').find('a').string
-        carMouth = [title,price,price2,score,participantNum]
-        carMouths.insert(count,carMouth)
-        count = count +1
-        # print(carMouth)
-    return carMouths
+grade = ['/suva01/','/suva1/','/suvb1/','/suvc1/','/suvd1/','/a001/','/a01/','/a1/','/b1/','/c1/','/d1/','/mpv1/','/s1/','/p1/','/mb1/']
+
+out = open('carPrice.csv', 'w', newline='')
+csv_write = csv.writer(out)
+csv_write.writerow(['车系', '车型', '车款链接', '车款名称', '厂商指导价', '评分', '参与评分人数'])
 
 def getCarMsg(url):
     """
@@ -55,13 +38,10 @@ def getCarMsg(url):
     return rsList
 
 def getDetailData(audiTypeIdList):
-    out = open('test.csv', 'w', newline='')
-    csv_write = csv.writer(out)
-    csv_write.writerow(['车系','车型','车款链接','车款名称','厂商指导价','评分','参与评分人数'])
     for m in audiTypeIdList:
-        url = baseUrl + "/FrontAPI/GetSpecListBySeriesId?seriesId="+m[2].replace("/","")+"&specState=1"
-        content = get_code(url)
-        jsonData = demjson.decode(content)
+        url = baseUrl + "/FrontAPI/GetSpecListBySeriesId?seriesId="+m[2].replace("/","")+"&specState=1"   #拼接url字符串,
+        content = get_code(url)    #content为json格式的数据，格式为列表
+        jsonData = demjson.decode(content)   #解码成python的列表
         for i in jsonData:
             thisLink = "https://k.autohome.com.cn/spec/" + str(i['SpecId']) + "/"
             thisRow = [m[0].encode('gbk', 'ignore').decode('gbk'),           #车系
@@ -71,14 +51,15 @@ def getDetailData(audiTypeIdList):
                        i['MinPrice'].encode('gbk', 'ignore').decode('gbk'),
                        i['Average'].encode('gbk', 'ignore').decode('gbk'),
                        i['EvaluationCount']]
-            csv_write.writerow(thisRow)
+            csv_write.writerow(thisRow)  #将该行数据写入csv中
             print(thisRow)
-    out.close()
+
 
 def getCarAudi(carId):
     """
+    通过该车型id获取，该车型对应的车系
     :param carId: 汽车id(在汽车之家中的id)
-    :return:
+    :return: 车系（一个字符串）
     """
     url = "https://www.autohome.com.cn" + carId         #拼接该车型所在页面的网址
     htmlText = get_code(url)    #get页面源代码
@@ -91,6 +72,8 @@ def getCarAudi(carId):
 
 
 if __name__ == '__main__':
-
-    rsLi = getCarMsg("https://k.autohome.com.cn/suva01/")
-    getDetailData(rsLi)
+    for j in grade:
+        thisGradeUrl = baseUrl + j
+        rsLi = getCarMsg("https://k.autohome.com.cn/suva01/")
+        getDetailData(rsLi)
+    out.close()
