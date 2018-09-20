@@ -103,3 +103,4 @@ if __name__ == '__main__':
                 continue
             continue
         continue
+    out.close()
